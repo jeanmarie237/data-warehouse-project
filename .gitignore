@@ -1,0 +1,13 @@
+my_env
+.env
+.astro
+.dockerignore
+dags
+plugins
+tests
+config/__pycache__
+config/config.py
+include
+estate.log
+airflow_settings.yaml
+packages.txt
