@@ -11,3 +11,5 @@ include
 estate.log
 airflow_settings.yaml
 packages.txt
+datasets/source_crm
+datasets/source_erp
