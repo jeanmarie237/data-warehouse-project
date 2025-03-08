@@ -1,0 +1,101 @@
+# Configuration Pipeline
+
+cust_info: 'datasets/source_crm/cust_info.csv'
+prd_info: 'datasets/source_crm/prd_info.csv'
+sales_in: 'datasets/source_crm/sales_details.csv'
+
+cust_az1: 'datasets/source_erp/CUST_AZ12.csv'
+loc_a1: 'datasets/source_erp/LOC_A101.csv'
+px_cat: 'datasets/source_erp/PX_CAT_G1V2.csv'
+
+# Database connection
+postgresql:
+  host: localhost
+  port: 5432
+  username: postgres
+  password: postgres
+  database_name: DWH_01
+
+##########################################################################
+#         These tables will be loaded into the bronze schema             #
+##########################################################################
+
+prd_info_table: >
+  CREATE TABLE IF NOT EXISTS bronze.crm_prd_info (
+      prd_id       NUMERIC,
+      prd_key      TEXT,
+      prd_nm       TEXT,
+      prd_cost     NUMERIC,
+      prd_line     TEXT,
+      prd_start_dt TEXT,
+      prd_end_dt   TEXT
+  );
+
+prd_insert_PSQL: >
+  INSERT INTO bronze.crm_prd_info (prd_id, prd_key, prd_nm, prd_cost, prd_line, prd_start_dt, prd_end_dt) 
+  VALUES (%s, %s, %s, %s, %s, %s, %s);
+
+sales_de_table: >
+  CREATE TABLE IF NOT EXISTS bronze.crm_sales_details (
+      sls_ord_num  TEXT,
+      sls_prd_key  TEXT,
+      sls_cust_id  NUMERIC,
+      sls_order_dt NUMERIC,
+      sls_ship_dt  NUMERIC,
+      sls_due_dt   NUMERIC,
+      sls_sales    NUMERIC,
+      sls_quantity NUMERIC,
+      sls_price    NUMERIC
+  );
+
+sales_insert_PSQL: >
+  INSERT INTO bronze.crm_sales_details (sls_ord_num, sls_prd_key, sls_cust_id, sls_order_dt, sls_ship_dt, sls_due_dt, sls_sales, sls_quantity, sls_price)
+  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+
+cust_inf_table: >
+  CREATE TABLE IF NOT EXISTS bronze.crm_cust_info (
+      cst_id             NUMERIC,
+      cst_key            TEXT,
+      cst_firstname      TEXT,
+      cst_lastname       TEXT,
+      cst_marital_status TEXT,
+      cst_gndr           TEXT,
+      cst_create_date    TEXT
+  );
+
+cust_insert: >
+  INSERT INTO bronze.crm_cust_info (cst_id, cst_key, cst_firstname, cst_lastname, cst_marital_status, cst_gndr, cst_create_date)
+  VALUES (%s, %s, %s, %s, %s, %s, %s);
+
+cust_az_table: >
+  CREATE TABLE IF NOT EXISTS bronze.erp_cust_az12 (
+      cid   TEXT,
+      bdate TEXT,
+      gen   TEXT
+  );
+
+cust_az_insert_PSQL: >
+  INSERT INTO bronze.erp_cust_az12 (cid, bdate, gen)
+  VALUES (%s, %s, %s);
+
+loc_a_table: >
+  CREATE TABLE IF NOT EXISTS bronze.erp_loc_a101 (
+      cid     TEXT,
+      cntry   TEXT
+  );
+
+loc_a_insert_PSQL: >
+  INSERT INTO bronze.erp_loc_a101 (cid, cntry)
+  VALUES (%s, %s);
+
+px_cat_table: >
+  CREATE TABLE IF NOT EXISTS bronze.erp_px_cat_g1v2 (
+      id          TEXT,
+      cat         TEXT,
+      subcat      TEXT,
+      maintenance TEXT
+  );
+
+px_cat_insert_PSQL: >
+  INSERT INTO bronze.erp_px_cat_g1v2 (id, cat, subcat, maintenance)
+  VALUES (%s, %s, %s, %s);

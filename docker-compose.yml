@@ -1,4 +1,4 @@
-version: '3.8'
+#version: '3.8'
 
 services:
   postgres:
@@ -9,12 +9,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5433:5432"
+       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - custom_network
-    restart: always
+       - postgres_data:/var/lib/postgresql/data
+    # networks:
+    #   - custom_network
+    # restart: always
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -26,14 +26,15 @@ services:
       - "5051:80"
     depends_on:
       - postgres
-    networks:
-      - custom_network
+  #  networks:
+  #    - custom_network
+  #    - data-warehouse-project_eb0933_airflow
     restart: always
 
 volumes:
   postgres_data:
-    driver: local
+    #driver: local
 
-networks:
-  custom_network:
-    driver: bridge
+# networks:
+#   custom_network:
+#     driver: bridge

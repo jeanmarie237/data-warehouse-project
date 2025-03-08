@@ -13,3 +13,9 @@ airflow_settings.yaml
 packages.txt
 datasets/source_crm
 datasets/source_erp
+tests_c/donnees_imo.py
+scripts/ETL/__pycache__
+config.ini
+.vscode
+tests_c/SELECT * FROM bronze.pgsql
+tests_c/all_query.sql

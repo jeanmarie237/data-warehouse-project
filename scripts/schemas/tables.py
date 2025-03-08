@@ -17,13 +17,17 @@ import os
 import sys
 import re
 import yaml
-import psycopg2
+#import psycopg2
 from loguru import logger
+#from config.utils import db_connexion
 
 # Add yaml path file
-yaml_file_table = os.path.join(os.path.dirname(__file__), "..", "schemas", "all_tables.yaml")
+yaml_file_table = os.path.join(os.path.dirname(__file__), "all_tables.yaml")
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "config")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "config")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
+#print(sys.path)
+from config.utils import db_connexion
 import config
 
 # schemas/all_tables.yml
@@ -35,9 +39,9 @@ logger.remove()
 logger.add("estate.log", rotation="900kb", level="DEBUG")
 logger.add(sys.stderr, level="INFO")
 
+"""
 def db_connexion():
-    """
-    """
+
     conn = psycopg2.connect(
         dbname=config.db_name,
         user=config.user_name,
@@ -49,6 +53,7 @@ def db_connexion():
     cur = conn.cursor()
 
     return conn, cur
+"""
 
 def build_tables(sql_tables_query: object):
     """This function create a tables
@@ -83,8 +88,9 @@ def build_tables(sql_tables_query: object):
                         FROM pg_tables
                         WHERE schemaname = 'bronze'; 
                         """)
-            last_table = cur.fetchall()
-            tables = [row[0] for row in last_table]
+            #last_table = cur.fetchall()
+            tables = [row[0] for row in cur.fetchall()]
+            # print(tables)
             if table_m in tables:
                 logger.info(f"The table '{table_m}' was created successfully.")
             else:
@@ -95,7 +101,6 @@ def build_tables(sql_tables_query: object):
         
     except Exception as e:
         logger.error(f"Error : {e} when creating table '{table_m}'.")
-
 
     finally:
     # Close the connexion

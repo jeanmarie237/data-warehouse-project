@@ -3,7 +3,7 @@ import sys
 
 import psycopg2
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 
 from loguru import logger
 from sqlalchemy import create_engine, text

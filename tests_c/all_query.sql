@@ -1,0 +1,1 @@
+SELECT * FROM bronze.erp_loca101
