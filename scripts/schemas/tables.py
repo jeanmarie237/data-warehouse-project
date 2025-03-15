@@ -66,14 +66,14 @@ def build_tables(sql_tables_query: object):
         return
 
     try:
-        schema_db = "bronze"
+        schema_db = "silver"
 
         # Get name of table 
         table_m = None
-        match = re.search(r"CREATE TABLE IF NOT EXISTS bronze\.(\w+)", sql_tables_query)
+        match = re.search(r"CREATE TABLE IF NOT EXISTS silver\.(\w+)", sql_tables_query)
         table_m = match.group(1)
 
-        # Verify if bronze schema exist in database and create the table
+        # Verify if silver schema exist in database and create the table
         cur.execute("SELECT schema_name FROM information_schema.schemata;")
         schema_all = [row[0] for row in cur.fetchall()]
         if schema_db in schema_all:
@@ -86,7 +86,7 @@ def build_tables(sql_tables_query: object):
             cur.execute("""
                         SELECT tablename
                         FROM pg_tables
-                        WHERE schemaname = 'bronze'; 
+                        WHERE schemaname = 'silver'; 
                         """)
             #last_table = cur.fetchall()
             tables = [row[0] for row in cur.fetchall()]

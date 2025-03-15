@@ -22,18 +22,20 @@ postgresql:
 
 prd_info_table: >
   CREATE TABLE IF NOT EXISTS bronze.crm_prd_info (
-      prd_id       NUMERIC,
+      prd_id       NUMERIC PRIMARY KEY,
       prd_key      TEXT,
       prd_nm       TEXT,
       prd_cost     NUMERIC,
       prd_line     TEXT,
-      prd_start_dt TEXT,
-      prd_end_dt   TEXT
+      prd_start_dt VARCHAR,
+      prd_end_dt   VARCHAR
   );
 
 prd_insert_PSQL: >
   INSERT INTO bronze.crm_prd_info (prd_id, prd_key, prd_nm, prd_cost, prd_line, prd_start_dt, prd_end_dt) 
-  VALUES (%s, %s, %s, %s, %s, %s, %s);
+  VALUES %s
+  ON CONFLICT (prd_id) DO NOTHING;  -- Ignorer les enregistrements en conflit
+#  VALUES (%s, %s, %s, %s, %s, %s, %s);
 
 sales_de_table: >
   CREATE TABLE IF NOT EXISTS bronze.crm_sales_details (
@@ -50,47 +52,55 @@ sales_de_table: >
 
 sales_insert_PSQL: >
   INSERT INTO bronze.crm_sales_details (sls_ord_num, sls_prd_key, sls_cust_id, sls_order_dt, sls_ship_dt, sls_due_dt, sls_sales, sls_quantity, sls_price)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+  VALUES %s;
+#  ON CONFLICT (sls_cust_id) DO NOTHING;  -- Ignorer les enregistrements en conflit
+#  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
 
 cust_inf_table: >
   CREATE TABLE IF NOT EXISTS bronze.crm_cust_info (
-      cst_id             NUMERIC,
+      cst_id             NUMERIC PRIMARY KEY,
       cst_key            TEXT,
       cst_firstname      TEXT,
       cst_lastname       TEXT,
       cst_marital_status TEXT,
       cst_gndr           TEXT,
-      cst_create_date    TEXT
+      cst_create_date    VARCHAR
   );
 
 cust_insert: >
   INSERT INTO bronze.crm_cust_info (cst_id, cst_key, cst_firstname, cst_lastname, cst_marital_status, cst_gndr, cst_create_date)
-  VALUES (%s, %s, %s, %s, %s, %s, %s);
+  VALUES %s
+  ON CONFLICT (cst_id) DO NOTHING;  -- Ignorer les enregistrements en conflit
+#  VALUES (%s, %s, %s, %s, %s, %s, %s);
 
 cust_az_table: >
   CREATE TABLE IF NOT EXISTS bronze.erp_cust_az12 (
-      cid   TEXT,
-      bdate TEXT,
+      cid   TEXT PRIMARY KEY,
+      bdate VARCHAR,
       gen   TEXT
   );
 
 cust_az_insert_PSQL: >
   INSERT INTO bronze.erp_cust_az12 (cid, bdate, gen)
-  VALUES (%s, %s, %s);
+  VALUES %s
+  ON CONFLICT (cid) DO NOTHING;  -- Ignorer les enregistrements en conflit
+#  VALUES (%s, %s, %s);
 
 loc_a_table: >
   CREATE TABLE IF NOT EXISTS bronze.erp_loc_a101 (
-      cid     TEXT,
+      cid     TEXT PRIMARY KEY,
       cntry   TEXT
   );
 
 loc_a_insert_PSQL: >
   INSERT INTO bronze.erp_loc_a101 (cid, cntry)
-  VALUES (%s, %s);
+  VALUES %s
+  ON CONFLICT (cid) DO NOTHING;  -- Ignorer les enregistrements en conflit
+#  VALUES (%s, %s);
 
 px_cat_table: >
   CREATE TABLE IF NOT EXISTS bronze.erp_px_cat_g1v2 (
-      id          TEXT,
+      id          TEXT PRIMARY KEY,
       cat         TEXT,
       subcat      TEXT,
       maintenance TEXT
@@ -98,4 +108,110 @@ px_cat_table: >
 
 px_cat_insert_PSQL: >
   INSERT INTO bronze.erp_px_cat_g1v2 (id, cat, subcat, maintenance)
-  VALUES (%s, %s, %s, %s);
+  VALUES %s
+  ON CONFLICT (id) DO NOTHING;  -- Ignorer les enregistrements en conflit
+#  VALUES (%s, %s, %s, %s);
+
+
+##########################################################################
+#         These tables will be loaded into the silver schema             #
+##########################################################################
+   
+prd_info_table_s: >
+  TRUNCATE TABLE silver.crm_prd_info;
+  CREATE TABLE IF NOT EXISTS silver.crm_prd_info (
+      prd_id       NUMERIC,
+      cat_id       TEXT,
+      prd_key      TEXT,
+      prd_nm       TEXT,
+      prd_cost     NUMERIC,
+      prd_line     TEXT,
+      prd_start_dt TIMESTAMP,
+      prd_end_dt   TIMESTAMP,
+      dwh_create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+prd_insert_PSQL_s: >
+  INSERT INTO silver.crm_prd_info (prd_id, cat_id, prd_key, prd_nm, prd_cost, prd_line, prd_start_dt, prd_end_dt)
+  VALUES %s; 
+#  VALUES (%s, %s, %s, %s, %s, %s, %s);
+
+sales_de_table_s: >
+  TRUNCATE TABLE silver.crm_sales_details;
+  CREATE TABLE IF NOT EXISTS silver.crm_sales_details (
+      sls_ord_num  TEXT,
+      sls_prd_key  TEXT,
+      sls_cust_id  NUMERIC,
+      sls_order_dt TIMESTAMP,
+      sls_ship_dt  TIMESTAMP,
+      sls_due_dt   TIMESTAMP,
+      sls_sales    NUMERIC,
+      sls_quantity NUMERIC,
+      sls_price    NUMERIC,
+      dwh_create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+sales_insert_PSQL_s: >
+  INSERT INTO silver.crm_sales_details (sls_ord_num, sls_prd_key, sls_cust_id, sls_order_dt, sls_ship_dt, sls_due_dt, sls_sales, sls_quantity, sls_price)
+  VALUES %s;
+#  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+
+cust_inf_table_s: >
+  TRUNCATE TABLE silver.crm_cust_info;
+  CREATE TABLE IF NOT EXISTS silver.crm_cust_info (
+      cst_id             NUMERIC,
+      cst_key            TEXT,
+      cst_firstname      TEXT,
+      cst_lastname       TEXT,
+      cst_marital_status TEXT,
+      cst_gndr           TEXT,
+      cst_create_date    TIMESTAMP,
+      dwh_create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+cust_insert_s: >
+  INSERT INTO silver.crm_cust_info (cst_id, cst_key, cst_firstname, cst_lastname, cst_marital_status, cst_gndr, cst_create_date)
+  VALUES %s;
+# VALUES (%s, %s, %s, %s, %s, %s, %s);
+
+cust_az_table_s: >
+  TRUNCATE TABLE silver.erp_cust_az12;
+  CREATE TABLE IF NOT EXISTS silver.erp_cust_az12 (
+      cid   TEXT,
+      bdate DATE,
+      gen   TEXT,
+      dwh_create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+cust_az_insert_PSQL_s: >
+  INSERT INTO silver.erp_cust_az12 (cid, bdate, gen)
+  VALUES %s;
+#  VALUES (%s, %s, %s);
+
+loc_a_table_s: >
+  TRUNCATE TABLE silver.erp_loc_a101;
+  CREATE TABLE IF NOT EXISTS silver.erp_loc_a101 (
+      cid     TEXT,
+      cntry   TEXT,
+      dwh_create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+loc_a_insert_PSQL_s: >
+  INSERT INTO silver.erp_loc_a101 (cid, cntry)
+  VALUES %s;
+#  VALUES (%s, %s);
+
+px_cat_table_s: >
+  TRUNCATE TABLE silver.erp_px_cat_g1v2;
+  CREATE TABLE IF NOT EXISTS silver.erp_px_cat_g1v2 (
+      id          TEXT,
+      cat         TEXT,
+      subcat      TEXT,
+      maintenance TEXT,
+      dwh_create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );
+
+px_cat_insert_PSQL_s: >
+  INSERT INTO silver.erp_px_cat_g1v2 (id, cat, subcat, maintenance)
+  VALUES %s;
+#  VALUES (%s, %s, %s, %s);
