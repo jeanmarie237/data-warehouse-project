@@ -10,5 +10,8 @@
             "database": "DWH_01",
             "username": "postgres"
         }
+    ],
+    "python.analysis.extraPaths": [
+        "./tests/dags"
     ]
 }

@@ -66,11 +66,11 @@ def build_tables(sql_tables_query: object):
         return
 
     try:
-        schema_db = "silver"
+        schema_db = "gold"
 
         # Get name of table 
         table_m = None
-        match = re.search(r"CREATE TABLE IF NOT EXISTS silver\.(\w+)", sql_tables_query)
+        match = re.search(r"CREATE TABLE IF NOT EXISTS gold\.(\w+)", sql_tables_query)
         table_m = match.group(1)
 
         # Verify if silver schema exist in database and create the table
@@ -86,7 +86,7 @@ def build_tables(sql_tables_query: object):
             cur.execute("""
                         SELECT tablename
                         FROM pg_tables
-                        WHERE schemaname = 'silver'; 
+                        WHERE schemaname = 'gold'; 
                         """)
             #last_table = cur.fetchall()
             tables = [row[0] for row in cur.fetchall()]
@@ -102,6 +102,7 @@ def build_tables(sql_tables_query: object):
     except Exception as e:
         logger.error(f"Error : {e} when creating table '{table_m}'.")
 
+
     finally:
     # Close the connexion
         if cur:
@@ -112,12 +113,13 @@ def build_tables(sql_tables_query: object):
 def create_all_tables():
     """
     """
-    build_tables(config_table['prd_info_table'])
-    build_tables(config_table['sales_de_table'])
-    build_tables(config_table['cust_inf_table'])
-    build_tables(config_table['cust_az_table'])
-    build_tables(config_table['loc_a_table'])
-    build_tables(config_table['px_cat_table'])
+    # build_tables(config_table['prd_info_table'])
+    # build_tables(config_table['sales_de_table'])
+    # build_tables(config_table['cust_inf_table'])
+    # build_tables(config_table['cust_az_table'])
+    # build_tables(config_table['loc_a_table'])
+    # build_tables(config_table['px_cat_table'])
+    build_tables(config_table['customers_table'])
 
 
 if __name__ == "__main__":

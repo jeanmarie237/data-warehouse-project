@@ -7,6 +7,7 @@ sales_in: 'datasets/source_crm/sales_details.csv'
 cust_az1: 'datasets/source_erp/CUST_AZ12.csv'
 loc_a1: 'datasets/source_erp/LOC_A101.csv'
 px_cat: 'datasets/source_erp/PX_CAT_G1V2.csv'
+px_cat_p: 'datasets/source_erp/PX_CAT_G1V2.c'   # to making test
 
 # Database connection
 postgresql:
@@ -21,8 +22,9 @@ postgresql:
 ##########################################################################
 
 prd_info_table: >
-  CREATE TABLE IF NOT EXISTS bronze.crm_prd_info (
-      prd_id       NUMERIC PRIMARY KEY,
+  DROP TABLE IF EXISTS bronze.crm_prd_info;
+  CREATE TABLE bronze.crm_prd_info (
+      prd_id       TEXT,
       prd_key      TEXT,
       prd_nm       TEXT,
       prd_cost     NUMERIC,
@@ -33,12 +35,13 @@ prd_info_table: >
 
 prd_insert_PSQL: >
   INSERT INTO bronze.crm_prd_info (prd_id, prd_key, prd_nm, prd_cost, prd_line, prd_start_dt, prd_end_dt) 
-  VALUES %s
-  ON CONFLICT (prd_id) DO NOTHING;  -- Ignorer les enregistrements en conflit
+  VALUES %s;
+#  ON CONFLICT (prd_id) DO NOTHING;  -- Ignorer les enregistrements en conflit
 #  VALUES (%s, %s, %s, %s, %s, %s, %s);
 
 sales_de_table: >
-  CREATE TABLE IF NOT EXISTS bronze.crm_sales_details (
+  DROP TABLE IF EXISTS bronze.crm_sales_details;
+  CREATE TABLE bronze.crm_sales_details (
       sls_ord_num  TEXT,
       sls_prd_key  TEXT,
       sls_cust_id  NUMERIC,
@@ -52,29 +55,31 @@ sales_de_table: >
 
 sales_insert_PSQL: >
   INSERT INTO bronze.crm_sales_details (sls_ord_num, sls_prd_key, sls_cust_id, sls_order_dt, sls_ship_dt, sls_due_dt, sls_sales, sls_quantity, sls_price)
-  VALUES %s;
-#  ON CONFLICT (sls_cust_id) DO NOTHING;  -- Ignorer les enregistrements en conflit
+  VALUES %s; 
+#  ON CONFLICT (sls_prd_key) DO NOTHING;  -- Ignorer les enregistrements en conflit
 #  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
 
 cust_inf_table: >
-  CREATE TABLE IF NOT EXISTS bronze.crm_cust_info (
-      cst_id             NUMERIC PRIMARY KEY,
+  DROP TABLE IF EXISTS bronze.crm_cust_info;
+  CREATE TABLE bronze.crm_cust_info (
+      cst_id             NUMERIC,
       cst_key            TEXT,
       cst_firstname      TEXT,
       cst_lastname       TEXT,
       cst_marital_status TEXT,
       cst_gndr           TEXT,
-      cst_create_date    VARCHAR
+      cst_create_date    TEXT 
   );
 
 cust_insert: >
   INSERT INTO bronze.crm_cust_info (cst_id, cst_key, cst_firstname, cst_lastname, cst_marital_status, cst_gndr, cst_create_date)
-  VALUES %s
-  ON CONFLICT (cst_id) DO NOTHING;  -- Ignorer les enregistrements en conflit
+  VALUES %s;
+#  ON CONFLICT (cst_id) DO NOTHING;  -- Ignorer les enregistrements en conflit
 #  VALUES (%s, %s, %s, %s, %s, %s, %s);
 
 cust_az_table: >
-  CREATE TABLE IF NOT EXISTS bronze.erp_cust_az12 (
+  DROP TABLE IF EXISTS bronze.erp_cust_az12;
+  CREATE TABLE bronze.erp_cust_az12 (
       cid   TEXT PRIMARY KEY,
       bdate VARCHAR,
       gen   TEXT
@@ -87,7 +92,8 @@ cust_az_insert_PSQL: >
 #  VALUES (%s, %s, %s);
 
 loc_a_table: >
-  CREATE TABLE IF NOT EXISTS bronze.erp_loc_a101 (
+  DROP TABLE IF EXISTS bronze.erp_loc_a101;
+  CREATE TABLE bronze.erp_loc_a101 (
       cid     TEXT PRIMARY KEY,
       cntry   TEXT
   );
@@ -99,7 +105,8 @@ loc_a_insert_PSQL: >
 #  VALUES (%s, %s);
 
 px_cat_table: >
-  CREATE TABLE IF NOT EXISTS bronze.erp_px_cat_g1v2 (
+  DROP TABLE IF EXISTS bronze.erp_px_cat_g1v2;
+  CREATE TABLE bronze.erp_px_cat_g1v2 (
       id          TEXT PRIMARY KEY,
       cat         TEXT,
       subcat      TEXT,
@@ -116,10 +123,11 @@ px_cat_insert_PSQL: >
 ##########################################################################
 #         These tables will be loaded into the silver schema             #
 ##########################################################################
-   
+
+# TRUNCATE TABLE silver.crm_prd_info;  
 prd_info_table_s: >
-  TRUNCATE TABLE silver.crm_prd_info;
-  CREATE TABLE IF NOT EXISTS silver.crm_prd_info (
+  DROP TABLE IF EXISTS silver.crm_prd_info;  
+  CREATE TABLE silver.crm_prd_info (
       prd_id       NUMERIC,
       cat_id       TEXT,
       prd_key      TEXT,
@@ -133,12 +141,12 @@ prd_info_table_s: >
 
 prd_insert_PSQL_s: >
   INSERT INTO silver.crm_prd_info (prd_id, cat_id, prd_key, prd_nm, prd_cost, prd_line, prd_start_dt, prd_end_dt)
-  VALUES %s; 
+  VALUES %s;
 #  VALUES (%s, %s, %s, %s, %s, %s, %s);
 
 sales_de_table_s: >
-  TRUNCATE TABLE silver.crm_sales_details;
-  CREATE TABLE IF NOT EXISTS silver.crm_sales_details (
+  DROP TABLE IF EXISTS silver.crm_sales_details;
+  CREATE TABLE silver.crm_sales_details (
       sls_ord_num  TEXT,
       sls_prd_key  TEXT,
       sls_cust_id  NUMERIC,
@@ -156,9 +164,10 @@ sales_insert_PSQL_s: >
   VALUES %s;
 #  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
 
+#
 cust_inf_table_s: >
-  TRUNCATE TABLE silver.crm_cust_info;
-  CREATE TABLE IF NOT EXISTS silver.crm_cust_info (
+  DROP TABLE IF EXISTS silver.crm_cust_info;
+  CREATE TABLE silver.crm_cust_info (
       cst_id             NUMERIC,
       cst_key            TEXT,
       cst_firstname      TEXT,
@@ -174,9 +183,10 @@ cust_insert_s: >
   VALUES %s;
 # VALUES (%s, %s, %s, %s, %s, %s, %s);
 
+# 
 cust_az_table_s: >
-  TRUNCATE TABLE silver.erp_cust_az12;
-  CREATE TABLE IF NOT EXISTS silver.erp_cust_az12 (
+  DROP TABLE IF EXISTS silver.erp_cust_az12;
+  CREATE TABLE silver.erp_cust_az12 (
       cid   TEXT,
       bdate DATE,
       gen   TEXT,
@@ -188,9 +198,10 @@ cust_az_insert_PSQL_s: >
   VALUES %s;
 #  VALUES (%s, %s, %s);
 
+# 
 loc_a_table_s: >
-  TRUNCATE TABLE silver.erp_loc_a101;
-  CREATE TABLE IF NOT EXISTS silver.erp_loc_a101 (
+  DROP TABLE IF EXISTS silver.erp_loc_a101;
+  CREATE TABLE silver.erp_loc_a101 (
       cid     TEXT,
       cntry   TEXT,
       dwh_create_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -201,9 +212,10 @@ loc_a_insert_PSQL_s: >
   VALUES %s;
 #  VALUES (%s, %s);
 
+#  
 px_cat_table_s: >
-  TRUNCATE TABLE silver.erp_px_cat_g1v2;
-  CREATE TABLE IF NOT EXISTS silver.erp_px_cat_g1v2 (
+  DROP TABLE IF EXISTS silver.erp_px_cat_g1v2;
+  CREATE TABLE silver.erp_px_cat_g1v2 (
       id          TEXT,
       cat         TEXT,
       subcat      TEXT,
@@ -215,3 +227,274 @@ px_cat_insert_PSQL_s: >
   INSERT INTO silver.erp_px_cat_g1v2 (id, cat, subcat, maintenance)
   VALUES %s;
 #  VALUES (%s, %s, %s, %s);
+
+
+##########################################################################
+#                      Transformation data                               #
+##########################################################################
+
+query_cust_info: >
+  SELECT 
+      cst_id,
+      cst_key,
+      TRIM(cst_firstname) AS cst_firstname,
+      TRIM(cst_lastname) AS cst_lastname,
+      CASE 
+          WHEN UPPER(TRIM(cst_marital_status)) = 'S' THEN 'Single'
+          WHEN UPPER(TRIM(cst_marital_status)) = 'M' THEN 'Married'
+          ELSE 'n/a'
+      END cst_marital_status,
+      CASE 
+          WHEN UPPER(TRIM(cst_gndr)) = 'F' THEN 'Female'
+          WHEN UPPER(TRIM(cst_gndr)) = 'M' THEN 'Male'
+          ELSE 'n/a'
+      END cst_gndr,
+      CASE 
+          WHEN cst_create_date = 'NaN' THEN '2025-10-07 00:00:00+00'
+          WHEN cst_create_date = 'NaT' THEN '2025-10-07 00:00:00+00'
+          ELSE TO_TIMESTAMP(cst_create_date, 'YYYY-MM-DD HH24:MI:SS')
+      END AS cst_create_date
+  FROM(
+      SELECT
+          *,
+          ROW_NUMBER() OVER (PARTITION BY cst_id ORDER BY cst_create_date) AS flag_last
+      FROM bronze.crm_cust_info
+      WHERE cst_id IS NOT NULL
+  ) c WHERE flag_last = 1;
+
+
+query_prd: >
+  WITH correct_form AS (
+      SELECT 
+          prd_id,
+          REPLACE(SUBSTRING(prd_key, 1, 5), '-', '_') AS cat_id,
+          SUBSTRING(prd_key, 7, LENGTH(prd_key)) AS prd_key,
+          prd_nm,
+          CASE
+              WHEN prd_cost = 'NaN' THEN 0
+              ELSE COALESCE(prd_cost, 0)
+          END AS prd_cost,
+          CASE
+              WHEN UPPER(TRIM(prd_line)) = 'M' THEN 'Mountain'
+              WHEN UPPER(TRIM(prd_line)) = 'R' THEN 'Road'
+              WHEN UPPER(TRIM(prd_line)) = 'S' THEN 'Other Sales'
+              WHEN UPPER(TRIM(prd_line)) = 'T' THEN 'Touring'
+              ELSE 'n/a'
+          END AS prd_line,
+          COALESCE(
+              MAX(prd_start_dt) FILTER (WHERE prd_start_dt <> 'NaN' AND prd_start_dt IS NOT NULL) 
+              OVER (ORDER BY prd_id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW),
+              '2007-12-28 00:00:00'
+          ) AS prd_start_dt,
+          COALESCE(
+              MAX(prd_end_dt) FILTER (WHERE prd_end_dt <> 'NaN' AND prd_end_dt IS NOT NULL) 
+              OVER (ORDER BY prd_id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW),
+              '2007-12-28 00:00:00'
+          ) AS prd_end_dt
+      FROM bronze.crm_prd_info
+  )
+  SELECT 
+      prd_id,
+      cat_id,
+      prd_key, 
+      prd_nm,
+      prd_cost,
+      prd_line,
+      prd_start_dt::DATE AS prd_start_dt, 
+      LEAD(prd_start_dt) OVER (PARTITION BY prd_key ORDER BY prd_start_dt):: DATE AS prd_end_dt
+  FROM correct_form;
+
+
+query_sales_s: >
+  SELECT
+      sls_ord_num,
+      sls_prd_key,
+      sls_cust_id,
+      CASE 
+          WHEN sls_order_dt = 0 OR LENGTH(sls_order_dt::text) != 8 THEN '2010-12-29 00:00:00'
+          ELSE CAST(CAST(sls_order_dt AS VARCHAR) AS TIMESTAMP)
+      END AS sls_order_dt,
+      CASE 
+          WHEN sls_ship_dt = 0 OR LENGTH(sls_ship_dt::text) != 8  THEN '2011-01-05 00:00:00'
+          ELSE CAST(CAST(sls_ship_dt AS VARCHAR) AS TIMESTAMP)
+      END AS sls_ship_dt,
+      CASE 
+          WHEN sls_due_dt = 0 OR LENGTH(sls_due_dt::text) != 8  THEN '2011-01-10 00:00:00'
+          ELSE CAST(CAST(sls_due_dt AS VARCHAR) AS TIMESTAMP)
+      END AS sls_due_dt,
+      CASE 
+          WHEN sls_sales IS NULL OR sls_sales <= 0 OR sls_sales != sls_quantity * ABS(sls_price)
+          THEN sls_quantity * ABS(sls_price)
+          ELSE sls_sales
+      END AS sls_sales,   
+      sls_quantity,
+      CASE 
+          WHEN sls_price IS NULL OR sls_price <= 0
+          THEN sls_sales / NULLIF(sls_quantity, 0)
+          ELSE sls_price
+      END AS sls_price
+  FROM bronze.crm_sales_details;
+
+
+query_erp_cust: >
+  SELECT 
+      CASE 
+          WHEN LENGTH(cid) > 4 THEN SUBSTRING(cid FROM 4)
+          ELSE cid
+      END AS cid,
+      CASE  
+          WHEN bdate::DATE > CURRENT_DATE THEN NULL
+          ELSE bdate
+      END AS bdate,
+      CASE 
+          WHEN UPPER(TRIM(gen)) IN ('F', 'FEMALE')  THEN 'Female'
+          WHEN UPPER(TRIM(gen)) IN ('M', 'MALE')  THEN 'Male'
+          ELSE 'n/a'
+      END AS gen 
+  FROM bronze.erp_cust_az12;
+
+
+query_loc: >
+  SELECT 
+      REPLACE(cid, '-', '') AS cid,
+      CASE 
+          WHEN TRIM(cntry) = 'DE' THEN 'Germany'
+          WHEN TRIM(cntry) IN ('US','USA') THEN 'United States'
+          WHEN TRIM(cntry) = '' OR cntry IS NULL THEN 'n/a'
+          ELSE TRIM(cntry)
+      END AS cntry
+  FROM bronze.erp_loc_a101;
+
+
+query_px: >
+  SELECT
+      id,
+      cat,
+      subcat,
+      maintenance 
+  FROM bronze.erp_px_cat_g1v2;
+
+
+
+##########################################################################
+#     Traformation for build dim tables and fact for gold schema         #
+##########################################################################
+
+query_dim_cust: >
+  SELECT
+      ROW_NUMBER() OVER (ORDER BY cst_id) AS customer_key,
+      ci.cst_id AS customer_id,
+      ci.cst_key AS customer_number,
+      ci.cst_firstname AS first_name,
+      ci.cst_lastname AS last_name,
+      la.cntry AS country,
+      ci.cst_marital_status AS marital_status,
+      CASE 
+          WHEN ci.cst_gndr != 'n/a' THEN ci.cst_gndr
+          ELSE COALESCE(ca.gen, 'n/a')
+      END AS gender,
+      ca.bdate AS birthdate,
+      ci.cst_create_date AS create_date
+  FROM silver.crm_cust_info ci
+  LEFT JOIN silver.erp_cust_az12 ca ON ci.cst_key = ca.cid
+  LEFT JOIN silver.erp_loc_a101 la  ON ci.cst_key = la.cid;
+
+
+query_product: >
+  SELECT
+      ROW_NUMBER() OVER (ORDER BY pn.prd_start_dt, pn.prd_key) AS product_key,
+      pn.prd_id AS product_id,
+      pn.prd_key AS product_number,
+      pn.prd_nm AS product_name,
+      pn.cat_id AS category_id,
+      pc.cat AS category,
+      pc.subcat AS subcategory,
+      pc.maintenance,
+      pn.prd_cost AS cost,
+      pn.prd_line AS product_line,
+      pn.prd_start_dt AS start_date
+  FROM silver.crm_prd_info pn
+  LEFT JOIN silver.erp_px_cat_g1v2 pc ON pn.cat_id = pc.id
+  WHERE prd_end_dt IS NULL;
+
+
+query_sales: >
+  SELECT 
+      sd.sls_ord_num AS order_number,
+      pr.product_key,
+      cu.customer_key,
+      sd.sls_order_dt AS order_date,
+      sd.sls_ship_dt AS shipping_date,
+      sd.sls_due_dt AS due_date,
+      sd.sls_sales AS sales_amount,
+      sd.sls_quantity AS quantity,
+      sd.sls_price AS price
+  FROM silver.crm_sales_details sd
+  LEFT JOIN gold.dim_products pr ON sd.sls_prd_key  = pr.product_number
+  LEFT JOIN gold.dim_customers cu ON sd.sls_cust_id = cu.customer_id;
+
+
+
+##########################################################################
+#         Tables for gold schema                                         #
+##########################################################################
+
+customers_table: >
+  CREATE SCHEMA IF NOT EXISTS gold;
+  DROP TABLE IF EXISTS gold.dim_customers;
+  CREATE TABLE gold.dim_customers (
+      customer_key      BIGINT,
+      customer_id       NUMERIC,
+      customer_number   TEXT,
+      first_name        TEXT,
+      last_name         TEXT,
+      country           TEXT,
+      marital_status    TEXT,
+      gender            TEXT,
+      birthdate         DATE,
+      create_date       DATE
+  );
+
+customers_insert: >
+  INSERT INTO gold.dim_customers (customer_key, customer_id, customer_number, first_name, last_name, country, marital_status, gender, birthdate, create_date)  
+  VALUES %s;
+
+
+products_table: >
+  DROP TABLE IF EXISTS gold.dim_products;
+  CREATE TABLE gold.dim_products (
+      product_key      BIGINT,
+      product_id       NUMERIC,
+      product_number   TEXT,
+      product_name     TEXT,
+      category_id      TEXT,
+      category         TEXT,
+      subcategory      TEXT,
+      maintenance      TEXT,
+      cost             NUMERIC,
+      product_line     TEXT,
+      start_date       DATE
+  );
+
+products_insert: >
+  INSERT INTO gold.dim_products (product_key, product_id, product_number, product_name, category_id, category, subcategory, maintenance, cost, product_line, start_date)
+  VALUES %s;
+
+
+fact_sales_table: >
+  DROP TABLE IF EXISTS gold.fact_sales;
+  CREATE TABLE gold.fact_sales (
+      order_number     TEXT,
+      product_key      BIGINT,
+      customer_key     BIGINT,
+      order_date       DATE,
+      shipping_date    DATE,
+      due_date         DATE,
+      sales_amount     NUMERIC,
+      quantity         NUMERIC,
+      price            NUMERIC
+  );
+
+sales_insert: >
+  INSERT INTO gold.fact_sales (order_number, product_key, customer_key, order_date, shipping_date, due_date, sales_amount, quantity, price)
+  VALUES %s;

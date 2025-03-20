@@ -125,6 +125,8 @@ def transform_cust_info():
 def transform_crm_prd():
     """
     """
+    result = connection_db()
+    conn, cur = result
 
     query_prd = """
     WITH correct_form AS (
@@ -170,8 +172,7 @@ def transform_crm_prd():
     FROM correct_form;
     """
 
-    result = connection_db()
-    conn, cur = result
+
     df_prd = []
     try:
         logger.info("Cleaning data start ...")
@@ -183,7 +184,7 @@ def transform_crm_prd():
         logger.info(f"Process of cleaning is finish. \n{df_prd.head()}")
 
     except Exception as e:
-        logger.error("Error during process of cleaning : {e}.")
+        logger.error(f"Error during process of cleaning : {e}.")
 
     finally:
         cur.close()
@@ -241,7 +242,7 @@ def transform_crm_sales():
         logger.info(f"Process of cleaning is finish. \n{df_sales.head()}")
 
     except Exception as e:
-        logger.error("Error during process of cleaning : {e}.")
+        logger.error(f"Error during process of cleaning : {e}.")
 
     finally:
         cur.close()
@@ -257,7 +258,7 @@ def transform_erp_cust():
     query_erp_cust="""
     SELECT 
         CASE 
-            WHEN LENGTH(cid) > 4 THEN SUBSTRING(cid FROM 5)
+            WHEN LENGTH(cid) > 4 THEN SUBSTRING(cid FROM 4)
             ELSE cid
         END AS cid,
         CASE  
@@ -281,7 +282,7 @@ def transform_erp_cust():
         logger.info(f"Process of cleaning is finish. \n{df_erp_cust.head()}")
 
     except Exception as e:
-        logger.error("Error during process of cleaning : {e}.")
+        logger.error(f"Error during process of cleaning : {e}.")
 
     finally:
         cur.close()
@@ -316,7 +317,7 @@ def transform_erp_loc():
         logger.info(f"Process of cleaning is finish. \n{df_loc.head()}")
 
     except Exception as e:
-        logger.error("Error during process of cleaning : {e}.")
+        logger.error(f"Error during process of cleaning : {e}.")
 
     finally:
         cur.close()
@@ -329,7 +330,6 @@ def transform_erp_loc():
 def transform_erp_px():
     """
     """
-
     query_px = """
     SELECT
         id,
@@ -349,7 +349,7 @@ def transform_erp_px():
         logger.info(f"Process of cleaning is finish. \n{df_px.head()}")
 
     except Exception as e:
-        logger.error("Error during process of cleaning : {e}.")
+        logger.error(f"Error during process of cleaning : {e}.")
 
     finally:
         cur.close()
@@ -358,3 +358,139 @@ def transform_erp_px():
     
     return df_px
 
+# Build Data model 
+def dim_customers():
+    """
+    """
+
+    query_dim_cust = """
+    --CREATE OR REPLACE VIEW gold.dim_customers AS 
+    SELECT
+        ROW_NUMBER() OVER (ORDER BY cst_id) AS custumer_key,
+        ci.cst_id AS customer_id,
+        ci.cst_key AS customer_number,
+        ci.cst_firstname AS first_name,
+        ci.cst_lastname AS last_name,
+        la.cntry AS country,
+        ci.cst_marital_status AS marital_status,
+        --ci.cst_gndr,
+        CASE 
+            WHEN ci.cst_gndr != 'n/a' THEN ci.cst_gndr
+            ELSE COALESCE(ca.gen, 'n/a')
+        END AS gender,
+        ca.bdate AS birthdate,
+        ci.cst_create_date AS create_date
+        --ca.gen,
+    FROM silver.crm_cust_info ci
+    LEFT JOIN silver.erp_cust_az12 ca ON ci.cst_key = ca.cid
+    LEFT JOIN silver.erp_loc_a101 la  ON ci.cst_key = la.cid;
+    """
+
+    #query_fetch_data = "SELECT * FROM gold.dim_customers;"
+
+    
+    result = connection_db()
+    conn, cur = result
+    dim_cust = []
+
+    try:
+        logger.info("Building dimension table customers start ...")
+        dim_cust = pd.read_sql_query(query_dim_cust, conn)
+        logger.info(f"Process of Building is finish. \n{dim_cust.head()}")
+
+    except Exception as e:
+        logger.error(f"Error during process of Building : {e}.")
+
+    finally:
+        cur.close()
+        conn.close()
+        logger.info("🔌 Connexion of PostgreSQL closed.")
+
+    
+    return dim_cust
+
+
+def dim_product():
+    """
+    """
+
+    query_product = """
+    SELECT
+        ROW_NUMBER() OVER (ORDER BY pn.prd_start_dt, pn.prd_key) AS product_key,
+        pn.prd_id AS product_id,
+        pn.prd_key AS product_number,
+        pn.prd_nm AS product_name,
+        pn.cat_id AS category_id,
+        pc.cat AS category,
+        pc.subcat AS subcategory,
+        pc.maintenance,
+        pn.prd_cost AS cost,
+        pn.prd_line AS product_line,
+        pn.prd_start_dt AS start_date
+        --pn.prd_end_dt
+    FROM silver.crm_prd_info pn
+    LEFT JOIN silver.erp_px_cat_g1v2 pc ON pn.cat_id = pc.id
+    WHERE prd_end_dt IS NULL;
+    """
+
+    result = connection_db()
+    conn, cur = result
+    dim_prd = []
+
+    try:
+        logger.info("Building dimension table customers start ...")
+        dim_prd = pd.read_sql_query(query_product, conn)
+        logger.info(f"Process of Building is finish. \n{dim_prd.head()}")
+
+    except Exception as e:
+        logger.error(f"Error during process of Building : {e}.")
+
+    finally:
+        cur.close()
+        conn.close()
+        logger.info("🔌 Connexion of PostgreSQL closed.")
+
+    return dim_prd
+
+
+# Build fact table sales
+def fact_sales():
+    """
+    """
+
+    query_sales = """
+    --CREATE VIEW gold.fact_sales AS 
+    SELECT 
+        sd.sls_ord_num AS order_number,
+        pr.product_key,
+        cu.customer_key,
+        --sd.sls_prd_key,
+        --sd.sls_cust_id,
+        sd.sls_order_dt AS order_date,
+        sd.sls_ship_dt AS shipping_date,
+        sd.sls_due_dt AS due_date,
+        sd.sls_sales AS sales_amount,
+        sd.sls_quantity AS quantity,
+        sd.sls_price AS price
+    FROM silver.crm_sales_details sd
+    LEFT JOIN gold.dim_products pr ON sd.sls_prd_key  = pr.product_number
+    LEFT JOIN gold.dim_customers cu ON sd.sls_cust_id = cu.customer_id;
+    """
+    result = connection_db()
+    conn, cur = result
+    df_sls = []
+
+    try:
+        logger.info("Building dimension table customers start ...")
+        df_sls = pd.read_sql_query(query_sales, conn)
+        logger.info(f"Process of Building is finish. \n{df_sls.head()}")
+
+    except Exception as e:
+        logger.error(f"Error during process of Building : {e}.")
+
+    finally:
+        cur.close()
+        conn.close()
+        logger.info("🔌 Connexion of PostgreSQL closed.")
+
+    return df_sls

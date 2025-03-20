@@ -1,32 +1,6 @@
 """
 This script connects to a PostgreSQL database, cleans and transforms data from multiple tables, and loads the cleaned data into corresponding tables in the database. It uses configuration files (`config.ini` and `all_tables.yaml`) for database connection details and table schemas.
 
-### Key Functions:
-1. **load_data_crm()**: Loads cleaned data into PostgreSQL tables. It creates tables if they don't exist and handles batch insertion with error handling.
-2. **Transform Functions**: Clean and transform data from source tables:
-   - `transform_cust_info()`: Cleans customer information data.
-   - `transform_crm_prd()`: Cleans product data.
-   - `transform_crm_sales()`: Cleans sales data.
-   - `transform_erp_cust()`: Cleans ERP customer data.
-   - `transform_erp_loc()`: Cleans location data.
-   - `transform_erp_px()`: Cleans product category data.
-3. **connection_db()**: Establishes a connection to the PostgreSQL database.
-
-### Workflow:
-- Reads configuration and schema details from `config.ini` and `all_tables.yaml`.
-- Cleans and transforms data using the transform functions.
-- Loads the cleaned data into the database using `load_data_crm()`.
-
-### Dependencies:
-- `pandas`: For data manipulation.
-- `psycopg2`: For PostgreSQL database interaction.
-- `loguru`: For logging.
-- `yaml`: For reading schema configurations.
-- `configparser`: For reading database configurations.
-
-### Usage:
-- Ensure `config.ini` and `all_tables.yaml` are correctly configured.
-- Run the script to clean, transform, and load data into the database.
 """
 
 import sys
@@ -37,16 +11,11 @@ import configparser
 import psycopg2
 import pandas as pd 
 from psycopg2.extras import execute_values
-from extract import read_data, reading_crm
-from transform import (
-    transform_cust_info,
-    transform_crm_prd,
-    transform_crm_sales,
-    transform_erp_cust, 
-    transform_erp_loc,
-    transform_erp_px,
-    connection_db
-)
+from sqlalchemy import create_engine, MetaData, Table
+from sqlalchemy.orm import sessionmaker
+from extract import read_data
+
+from transforme import transform_data
 
 from loguru import logger
 
@@ -55,9 +24,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..",
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 file_yaml = os.path.join(os.path.dirname(__file__), "..", "schemas", "all_tables.yaml")
 
-from config.utils import db_connexion
-#import config
-#from scripts.schemas.tables import db_connexion
 
 with open(file_yaml, 'r') as file:
     config_data = yaml.safe_load(file)
@@ -96,8 +62,8 @@ def load_data_crm(df: object, create_table_PSQL: str, insert_PSQL: str, batchsiz
 
     try:
 
-        # Extraction dynamique du nom de la table et du schéma depuis create_table_PSQL
-        match_name = re.search(r"CREATE\s+TABLE\s+IF\s+NOT\s+EXISTS\s+(\w+)\.(\w+)", create_table_PSQL, re.IGNORECASE)
+        # Extraction name of table and schema from create_table_PSQL
+        match_name = re.search(r"CREATE\s+TABLE\s+(\w+)\.(\w+)", create_table_PSQL, re.IGNORECASE)
         if match_name:
             schema_name = match_name.group(1)
             table_name = match_name.group(2)
@@ -140,6 +106,13 @@ def load_data_crm(df: object, create_table_PSQL: str, insert_PSQL: str, batchsiz
         for i in range(0, len(data_tuples), batchsize):
             batch = data_tuples[i:i+ batchsize]
             try:
+
+                """
+                for row in batch:
+                    if "" in row:
+                        print("🚨 Ligne avec valeur vide détectée :", row)
+                """
+                        
                 #cur.execute(insert_PSQL, row)
                 execute_values(cur, insert_PSQL, batch)
                 conn.commit()
@@ -168,27 +141,3 @@ def load_data_crm(df: object, create_table_PSQL: str, insert_PSQL: str, batchsiz
         conn.close()
         logger.info("🔌 PostgreSQL Connexion closed.")
 
-
-
-
-#da = read_data(config_data['prd_info'])
-#lp = load_data_crm(da, config_data['prd_info_table'], config_data['prd_insert_PSQL'], batchsize=1000)
-
-# row_cust = transform_cust_info()
-# lod_cust = load_data_crm(row_cust, config_data['cust_inf_table_s'], config_data['cust_insert_s'], batchsize=1000)
-
-# row_prd = transform_crm_prd()
-# ld_prd = load_data_crm(row_prd, config_data['prd_info_table_s'], config_data['prd_insert_PSQL_s'], batchsize=50)
-# print(ld_prd)
-
-# row_sales = transform_crm_sales()
-# lod_sales = load_data_crm(row_sales, config_data['sales_de_table_s'], config_data['sales_insert_PSQL_s'], batchsize=1000)
-
-# row_erp_cust = transform_erp_cust()
-# lod_erp_cust = load_data_crm(row_erp_cust, config_data['cust_az_table_s'], config_data['cust_az_insert_PSQL_s'], batchsize=1000)
-
-# row_erp_loc = transform_erp_loc()
-# lod_erp_loc = load_data_crm(row_erp_loc, config_data['loc_a_table_s'], config_data['loc_a_insert_PSQL_s'], batchsize=1000)
-
-row_erp_px = transform_erp_px()
-lod_erp_px = load_data_crm(row_erp_px, config_data['px_cat_table_s'], config_data['px_cat_insert_PSQL_s'], batchsize=5)
