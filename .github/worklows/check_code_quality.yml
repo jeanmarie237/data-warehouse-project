@@ -39,6 +39,6 @@ jobs:
 
     - name: Run tests
       env:
-        POSTGRES_HOST: postgres  # Définissez la variable d'environnement
+        POSTGRES_HOST: localhost  # Définissez la variable d'environnement
       run: |
         pytest tests/dags/test_data_quality.py tests/dags/test_extract.py
