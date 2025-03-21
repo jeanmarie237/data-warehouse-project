@@ -4,7 +4,7 @@ my_env
 .dockerignore
 dags
 plugins
-tests
+tests_c
 config/__pycache__
 config/config.py
 include
