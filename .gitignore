@@ -49,3 +49,5 @@ __pycache__
 tests/dags/.pytest_cache
 airflow_settings.example.yaml
 .env.exemple
+packages.txt
+
