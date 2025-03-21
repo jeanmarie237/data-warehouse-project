@@ -29,6 +29,10 @@ jobs:
     - name: Install Astro CLI
       run: |
         curl -sSL install.astronomer.io | sudo bash -s  # Installe l'Astro CLI
+        
+    - name: Initialize Astro project
+      run: |
+        astro dev init  # Initialise le répertoire comme un projet Astro
 
     - name: Start Astro services
       run: |
