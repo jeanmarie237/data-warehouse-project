@@ -52,7 +52,7 @@ warnings.filterwarnings(
 def connexion_db():
     try:
         conn = psycopg2.connect(
-            host="localhost",  # postgres Utilisez le nom du service Docker
+            host="postgres",  # postgres Utilisez le nom du service Docker
             port="5432",
             dbname="DWH_01",
             user="postgres",
@@ -62,6 +62,7 @@ def connexion_db():
     except Exception as e:
         print(f"❌ Error connecting to PostgreSQL : {e}")
         return None
+
 
 
 # Définir la fixture `conn` pour pytest
