@@ -11,7 +11,8 @@ estate.log
 airflow_settings.yaml
 packages.txt
 datasets/source_crm
-datasets/source_erp
+datasets/source_erp/CUST_AZ12.csv
+datasets/source_erp/LOC_A101.csv
 tests_c/donnees_imo.py
 scripts/ETL/__pycache__
 config.ini

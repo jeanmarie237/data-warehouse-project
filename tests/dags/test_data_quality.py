@@ -52,7 +52,7 @@ warnings.filterwarnings(
 def connexion_db():
     try:
         conn = psycopg2.connect(
-            host="postgres",  # Utilisez le nom du service Docker
+            host="localhost",  # postgres Utilisez le nom du service Docker
             port="5432",
             dbname="DWH_01",
             user="postgres",
