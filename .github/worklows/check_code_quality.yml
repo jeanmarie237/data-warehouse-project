@@ -14,7 +14,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:13
+        image: postgres:12.6
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -39,6 +39,6 @@ jobs:
 
     - name: Run tests
       env:
-        POSTGRES_HOST: localhost  # Définissez la variable d'environnement
+        POSTGRES_HOST: postgres  # Définissez la variable d'environnement
       run: |
         pytest tests/dags/test_data_quality.py tests/dags/test_extract.py
