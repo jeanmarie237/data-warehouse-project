@@ -1,5 +1,6 @@
 """
-This script connects to a PostgreSQL database, cleans and transforms data from multiple tables, and loads the cleaned data into corresponding tables in the database. It uses configuration files (`config.ini` and `all_tables.yaml`) for database connection details and table schemas.
+This script connects to a PostgreSQL database, cleans and transforms data from multiple tables, and loads the cleaned data into corresponding tables in the database. 
+It uses configuration files (`config.ini` and `all_tables.yaml`) for database connection details and table schemas.
 
 """
 

@@ -14,7 +14,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    steps:
+    steps: 
     - uses: actions/checkout@v2
 
     - name: Set up environment files
@@ -52,4 +52,5 @@ jobs:
 
     - name: Stop Astro services
       run: |
-        astro dev stop
+        astro dev stop 
+        
