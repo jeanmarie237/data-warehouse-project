@@ -52,5 +52,4 @@ jobs:
 
     - name: Stop Astro services
       run: |
-        astro dev stop 
-        
+        astro dev stop
