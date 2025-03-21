@@ -25,43 +25,43 @@ warnings.filterwarnings(
 
 # Configuration de la base de donnée en local : test en local
 # Connexion database :
-# def connexion_db():
-#     """
-#     """
-#     config_path = os.path.join(project_root, "config.ini")
-#     config = configparser.ConfigParser()
-#     config.read(config_path)
-#     try:
-#         # Connexion à la base de données
-#         conn = psycopg2.connect(
-#             host=config['POSTGRESQL']['host'],
-#             port=config['POSTGRESQL']['port'],
-#             dbname=config['POSTGRESQL']['database'],
-#             user=config['POSTGRESQL']['user'],
-#             password=config['POSTGRESQL']['password']
-#         )
-#         #cur = conn.cursor()
-#         logger.info("✅ Connected to database PostgreSQL succeffuly.")
-#         return conn
-#     except Exception as e:
-#         logger.error(f"❌ Error connecting to PostgreSQL : {e}")
-#         return None
+def connexion_db():
+    """
+    """
+    config_path = os.path.join(project_root, "config.ini")
+    config = configparser.ConfigParser()
+    config.read(config_path)
+    try:
+        # Connexion à la base de données
+        conn = psycopg2.connect(
+            host=config['POSTGRESQL']['host'],
+            port=config['POSTGRESQL']['port'],
+            dbname=config['POSTGRESQL']['database'],
+            user=config['POSTGRESQL']['user'],
+            password=config['POSTGRESQL']['password']
+        )
+        #cur = conn.cursor()
+        logger.info("✅ Connected to database PostgreSQL succeffuly.")
+        return conn
+    except Exception as e:
+        logger.error(f"❌ Error connecting to PostgreSQL : {e}")
+        return None
 
 
 # Configuration de la base de données en environement de test airflow:
-def connexion_db():
-    try:
-        conn = psycopg2.connect(
-            host="localhost",  # postgres Utilisez le nom du service Docker
-            port="5432",
-            dbname="DWH_01",
-            user="postgres",
-            password="postgres",
-        )
-        return conn
-    except Exception as e:
-        print(f"❌ Error connecting to PostgreSQL : {e}")
-        return None
+# def connexion_db():
+#     try:
+#         conn = psycopg2.connect(
+#             host="localhost",  # postgres Utilisez le nom du service Docker
+#             port="5432",
+#             dbname="DWH_01",
+#             user="postgres",
+#             password="postgres",
+#         )
+#         return conn
+#     except Exception as e:
+#         print(f"❌ Error connecting to PostgreSQL : {e}")
+#         return None
 
 
 # Définir la fixture `conn` pour pytest
