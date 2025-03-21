@@ -1,5 +1,5 @@
 my_env
-.env
+
 .astro
 .dockerignore
 plugins
@@ -8,7 +8,7 @@ config/__pycache__
 config/config.py
 include
 estate.log
-airflow_settings.yaml
+
 packages.txt
 datasets/source_crm
 datasets/source_erp/CUST_AZ12.csv
@@ -47,3 +47,5 @@ tests/dags/.pytest_cache
 tests/dags/__pycache__
 __pycache__
 tests/dags/.pytest_cache
+airflow_settings.example.yaml
+.env.exemple

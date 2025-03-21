@@ -17,11 +17,6 @@ jobs:
     steps: 
     - uses: actions/checkout@v2
 
-    - name: Set up environment files
-      run: |
-        cp .env.example .env
-        cp airflow_settings.example.yaml airflow_settings.yaml
-
     - name: Install Astro CLI
       run: |
         curl -sSL install.astronomer.io | sudo bash -s -- v1.0.0
