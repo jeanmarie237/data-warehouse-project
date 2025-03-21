@@ -2,7 +2,6 @@ my_env
 .env
 .astro
 .dockerignore
-dags
 plugins
 tests_c
 config/__pycache__
@@ -46,3 +45,4 @@ tests/dags/test_pip.py
 tests/dags/.pytest_cache
 tests/dags/__pycache__
 __pycache__
+tests/dags/.pytest_cache
