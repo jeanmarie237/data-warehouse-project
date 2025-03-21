@@ -17,34 +17,37 @@ jobs:
     steps: 
     - uses: actions/checkout@v2
 
-    - name: Install Astro CLI
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build Docker image
       run: |
-        curl -sSL install.astronomer.io | sudo bash -s -- v1.0.0
+        docker build -t astro-project-dwh .
 
-    - name: Start Astro services
-      run: |
-        astro dev start
-
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
-    - name: Run Black on specific files
-      run: |
-        black --check scripts/ETL/extract.py scripts/ETL/load.py tests/dags/test_data_quality.py tests/dags/test_extract.py
-
-    - name: Run tests in specific directories
+    - name: Run Docker container
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/DWH_01
       run: |
-        pytest tests/dags/test_data_quality.py tests/dags/test_extract.py
+        docker run -d --name astro-project-dwh \
+          -e DATABASE_URL=$DATABASE_URL \
+          astro-project-dwh
+          
+        # Attendre que le service démarre
+        sleep 10  
 
-    - name: Stop Astro services
+    - name: Run tests inside container
       run: |
-        astro dev stop
+        docker exec astro-project-dwh bash -c "
+          black --check scripts/ETL/extract.py \
+                         scripts/ETL/load.py \
+                         tests/dags/test_data_quality.py \
+                         tests/dags/test_extract.py && 
+          pytest tests/dags/test_data_quality.py \
+                 tests/dags/test_extract.py
+        "
+
+    - name: Stop and remove Docker container
+      if: always()
+      run: |
+        docker stop astro-project-dwh
+        docker rm astro-project-dwh
