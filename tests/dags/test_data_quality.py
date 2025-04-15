@@ -64,7 +64,6 @@ def connexion_db():
         return None
 
 
-
 # Définir la fixture `conn` pour pytest
 @pytest.fixture(scope="module")
 def conn():

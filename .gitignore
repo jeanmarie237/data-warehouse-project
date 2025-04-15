@@ -40,7 +40,7 @@ scripts/__pycache__
 scripts/ETL/load_test.py
 scripts/ETL/test_connexion.py
 scripts/ETL/transform.py
-scripts/ETL/transforme.py
+#scripts/ETL/transforme.py
 tests_c
 tests/dags/test_pip.py
 tests/dags/.pytest_cache
